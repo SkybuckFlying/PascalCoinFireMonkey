@@ -3,7 +3,7 @@
         <ProjectGuid>{99727DD4-AC4D-412F-BAB7-8C829697F6E1}</ProjectGuid>
         <MainSource>PascalCoinWallet.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Config Condition="'$(Config)'==''">Release</Config>
         <TargetedPlatforms>1025</TargetedPlatforms>
         <AppType>Application</AppType>
         <FrameworkType>VCL</FrameworkType>
