@@ -229,6 +229,7 @@ loop_start:
       op := Nil;
 	  account := FNode.Operations.SafeBoxTransaction.Account(_senderAccounts[iAcc]);
 
+	  // prevent scammer account from performing operations, more anti-scammer measures may come in the future.
 	  if account.account = 3516 then
 	  begin
 		raise Exception.Create('Error scammer account detected !');

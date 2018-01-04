@@ -876,6 +876,10 @@ object FRMOperation: TFRMOperation
         end
         object tsChangeInfo: TTabSheet
           Caption = 'Change Info'
+          ExplicitLeft = 0
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
           object lblChangeInfoErrors: TLabel
             Left = 13
             Top = 10
