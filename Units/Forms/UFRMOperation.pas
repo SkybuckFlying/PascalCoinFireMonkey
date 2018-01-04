@@ -27,7 +27,8 @@ uses
 {$ENDIF}
   Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, UNode, UWalletKeys, UCrypto, Buttons, UBlockChain,
-  UAccounts, UFRMAccountSelect, ActnList, ComCtrls, Types, UCommon;
+  UAccounts, UFRMAccountSelect, ActnList, ComCtrls, Types, UCommon,
+  System.Actions;
 
 Const
   CM_PC_WalletKeysChanged = WM_USER + 1;
@@ -226,10 +227,16 @@ begin
     for iAcc := 0 to Length(_senderAccounts) - 1 do begin
 loop_start:
       op := Nil;
-      account := FNode.Operations.SafeBoxTransaction.Account(_senderAccounts[iAcc]);
-      If Not UpdatePayload(account, errors) then
-        raise Exception.Create('Error encoding payload of sender account '+TAccountComp.AccountNumberToAccountTxtNumber(account.account)+': '+errors);
-      i := WalletKeys.IndexOfAccountKey(account.accountInfo.accountKey);
+	  account := FNode.Operations.SafeBoxTransaction.Account(_senderAccounts[iAcc]);
+
+	  if account.account = 3516 then
+	  begin
+		raise Exception.Create('Error scammer account detected !');
+	  end;
+
+	  If Not UpdatePayload(account, errors) then
+		raise Exception.Create('Error encoding payload of sender account '+TAccountComp.AccountNumberToAccountTxtNumber(account.account)+': '+errors);
+	  i := WalletKeys.IndexOfAccountKey(account.accountInfo.accountKey);
       if i<0 then begin
         Raise Exception.Create('Sender account private key not found in Wallet');
       end;
