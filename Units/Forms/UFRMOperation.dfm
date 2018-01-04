@@ -284,7 +284,7 @@ object FRMOperation: TFRMOperation
         Top = 11
         Width = 521
         Height = 167
-        ActivePage = tsTransaction
+        ActivePage = tsChangePrivateKey
         TabOrder = 0
         OnChange = PageControlOpTypeChange
         object tsTransaction: TTabSheet
@@ -375,10 +375,6 @@ object FRMOperation: TFRMOperation
         object tsChangePrivateKey: TTabSheet
           Caption = 'Change key'
           ImageIndex = 1
-          ExplicitLeft = 0
-          ExplicitTop = 0
-          ExplicitWidth = 0
-          ExplicitHeight = 0
           object gbChangeKey: TGroupBox
             Left = 7
             Top = 6
@@ -526,10 +522,6 @@ object FRMOperation: TFRMOperation
         object tsListForSale: TTabSheet
           Caption = 'List account for sale'
           ImageIndex = 3
-          ExplicitLeft = 0
-          ExplicitTop = 0
-          ExplicitWidth = 0
-          ExplicitHeight = 0
           object gbSaleType: TGroupBox
             Left = 7
             Top = 5
@@ -697,10 +689,6 @@ object FRMOperation: TFRMOperation
         object tsBuyAccount: TTabSheet
           Caption = 'Buy account'
           ImageIndex = 4
-          ExplicitLeft = 0
-          ExplicitTop = 0
-          ExplicitWidth = 0
-          ExplicitHeight = 0
           object lblAccountToBuy: TLabel
             Left = 13
             Top = 32

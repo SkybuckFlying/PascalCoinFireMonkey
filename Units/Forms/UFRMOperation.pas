@@ -232,13 +232,13 @@ loop_start:
 	  // prevent scammer account from performing operations, more anti-scammer measures may come in the future.
 	  if account.account = 3516 then
 	  begin
-		raise Exception.Create('Error scammer account detected !');
+		raise Exception.Create('Error sender scammer account detected !');
 	  end;
 
 	  If Not UpdatePayload(account, errors) then
 		raise Exception.Create('Error encoding payload of sender account '+TAccountComp.AccountNumberToAccountTxtNumber(account.account)+': '+errors);
 	  i := WalletKeys.IndexOfAccountKey(account.accountInfo.accountKey);
-      if i<0 then begin
+	  if i<0 then begin
         Raise Exception.Create('Sender account private key not found in Wallet');
       end;
 
@@ -248,30 +248,43 @@ loop_start:
       if account.balance > uint64(DefaultFee) then _fee := DefaultFee else _fee := account.balance;
       // Determine which operation type it is
       if PageControlOpType.ActivePage = tsTransaction then begin
-        {%region Operation: Transaction}
-        if Not UpdateOpTransaction(account,destAccount,_amount,errors) then raise Exception.Create(errors);
-        if Length(_senderAccounts) > 1 then begin
+		{%region Operation: Transaction}
+
+		if Not UpdateOpTransaction(account,destAccount,_amount,errors) then raise Exception.Create(errors);
+
+		if destAccount.account = 3516 then
+		begin
+			raise Exception.Create('Error destination scammer account detected !');
+		end;
+
+		if Length(_senderAccounts) > 1 then begin
           if account.balance>0 then begin
             if account.balance>DefaultFee then begin
               _amount := account.balance - DefaultFee;
               _fee := DefaultFee;
             end else begin
-              _amount := account.balance;
+			  _amount := account.balance;
               _fee := 0;
             end;
-          end else dooperation := false;
-        end else begin
-        end;
-        if dooperation then begin
-          op := TOpTransaction.CreateTransaction(account.account,account.n_operation+1,destAccount.account,wk.PrivateKey,_amount,_fee,FEncodedPayload);
-          inc(_totalamount,_amount);
+		  end else dooperation := false;
+		end;
+
+		if dooperation then begin
+		  op := TOpTransaction.CreateTransaction(account.account,account.n_operation+1,destAccount.account,wk.PrivateKey,_amount,_fee,FEncodedPayload);
+		  inc(_totalamount,_amount);
           inc(_totalfee,_fee);
         end;
         operationstxt := 'Transaction to '+TAccountComp.AccountNumberToAccountTxtNumber(destAccount.account);
         {%endregion}
       end else if (PageControlOpType.ActivePage = tsChangePrivateKey) then begin
         {%region Operation: Change Private Key}
-        if Not UpdateOpChangeKey(account,signerAccount,_newOwnerPublicKey,errors) then raise Exception.Create(errors);
+		if Not UpdateOpChangeKey(account,signerAccount,_newOwnerPublicKey,errors) then raise Exception.Create(errors);
+
+		if signerAccount.account = 3516 then
+		begin
+			raise Exception.Create('Error signer scammer account detected !');
+		end;
+
         if _V2 then begin
           // must ensure is Signer account last if included in sender accounts (not necessarily ordered enumeration)
           if (iAcc < Length(_senderAccounts) - 1) AND (account.account = signerAccount.account) then begin
@@ -292,35 +305,60 @@ loop_start:
         inc(_totalfee,_fee);
         operationstxt := 'Change private key to '+TAccountComp.GetECInfoTxt(_newOwnerPublicKey.EC_OpenSSL_NID);
         {%endregion}
-      end else if (PageControlOpType.ActivePage = tsListForSale) then begin
-        {%region Operation: List For Sale}
-        If Not UpdateOpListForSale(account,_salePrice,destAccount,signerAccount,_newOwnerPublicKey,_lockedUntil,errors) then raise Exception.Create(errors);
+	  end else if (PageControlOpType.ActivePage = tsListForSale) then begin
+
+		{%region Operation: List For Sale}
+		If Not UpdateOpListForSale(account,_salePrice,destAccount,signerAccount,_newOwnerPublicKey,_lockedUntil,errors) then raise Exception.Create(errors);
+
+		if destAccount.account = 3516 then
+		begin
+			raise Exception.Create('Error destination scammer account detected !');
+		end;
+
         // Special fee account:
         if signerAccount.balance>DefaultFee then _fee := DefaultFee
         else _fee := signerAccount.balance;
-        if (rbListAccountForPublicSale.Checked) then begin
+		if (rbListAccountForPublicSale.Checked) then begin
           op := TOpListAccountForSale.CreateListAccountForSale(signerAccount.account,signerAccount.n_operation+1+iAcc, account.account,_salePrice,_fee,destAccount.account,CT_TECDSA_Public_Nul,0,wk.PrivateKey,FEncodedPayload);
         end else if (rbListAccountForPrivateSale.Checked) then begin
           op := TOpListAccountForSale.CreateListAccountForSale(signerAccount.account,signerAccount.n_operation+1+iAcc, account.account,_salePrice,_fee,destAccount.account,_newOwnerPublicKey,_lockedUntil,wk.PrivateKey,FEncodedPayload);
         end else raise Exception.Create('Select Sale type');
         {%endregion}
-      end else if (PageControlOpType.ActivePage = tsDelist) then begin
-        {%region Operation: Delist For Sale}
-        if Not UpdateOpDelist(account,signerAccount,errors) then raise Exception.Create(errors);
-        // Special fee account:
+	  end else if (PageControlOpType.ActivePage = tsDelist) then begin
+		{%region Operation: Delist For Sale}
+		if Not UpdateOpDelist(account,signerAccount,errors) then raise Exception.Create(errors);
+
+		if signerAccount.account = 3516 then
+		begin
+			raise Exception.Create('Error signer scammer account detected !');
+		end;
+
+		// Special fee account:
         if signerAccount.balance>DefaultFee then _fee := DefaultFee
         else _fee := signerAccount.balance;
         op := TOpDelistAccountForSale.CreateDelistAccountForSale(signerAccount.account,signerAccount.n_operation+1+iAcc,account.account,_fee,wk.PrivateKey,FEncodedPayload);
         {%endregion}
       end else if (PageControlOpType.ActivePage = tsBuyAccount) then begin
         {%region Operation: Buy Account}
-        if Not UpdateOpBuyAccount(account,accountToBuy,_amount,_newOwnerPublicKey,errors) then raise Exception.Create(errors);
+		if Not UpdateOpBuyAccount(account,accountToBuy,_amount,_newOwnerPublicKey,errors) then raise Exception.Create(errors);
+
+		if accountToBuy.account = 3516 then
+		begin
+			raise Exception.Create('Error accountToBuy scammer account detected !');
+		end;
+
         op := TOpBuyAccount.CreateBuy(account.account,account.n_operation+1,accountToBuy.account,accountToBuy.accountInfo.account_to_pay,
           accountToBuy.accountInfo.price,_amount,_fee,_newOwnerPublicKey,wk.PrivateKey,FEncodedPayload);
         {%endregion}
       end else if (PageControlOpType.ActivePage = tsChangeInfo) then begin
         {%region Operation: Change Info}
-        if not UpdateOpChangeInfo(account,signerAccount,_changeName,_newName,_changeType,_newType,errors) then raise Exception.Create(errors);
+		if not UpdateOpChangeInfo(account,signerAccount,_changeName,_newName,_changeType,_newType,errors) then raise Exception.Create(errors);
+
+		if signerAccount.account = 3516 then
+		begin
+			raise Exception.Create('Error signerAccount scammer account detected !');
+		end;
+
         if signerAccount.balance>DefaultFee then _fee := DefaultFee
         else _fee := signerAccount.balance;
         op := TOpChangeAccountInfo.CreateChangeAccountInfo(signerAccount.account,signerAccount.n_operation+1,account.account,wk.PrivateKey,false,CT_TECDSA_Public_Nul,
